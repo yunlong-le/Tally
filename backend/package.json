@@ -1,0 +1,42 @@
+{
+  "name": "tally-backend",
+  "version": "1.0.0",
+  "description": "Tally 对位项目后端服务 - Node.js + TypeScript",
+  "main": "dist/api/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/api/index.ts",
+    "build": "tsc",
+    "start": "node dist/api/index.js",
+    "migrate": "psql $DATABASE_URL -f migrations/001_initial.sql",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "tally",
+    "schedule",
+    "expense",
+    "ai-agent"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "ai": "^4.3.15",
+    "@ai-sdk/openai": "^1.3.22",
+    "zod": "^3.22.4",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/express": "^4.17.21",
+    "@types/pg": "^8.10.9",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^9.0.7",
+    "ts-node-dev": "^2.0.0",
+    "ts-node": "^10.9.2"
+  }
+}

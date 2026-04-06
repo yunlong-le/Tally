@@ -1,0 +1,31 @@
+# Gradle files
+.gradle
+build/
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Android Studio
+.idea/
+*.iml
+local.properties
+.DS_Store
+
+# Kotlin/Java
+*.class
+*.jar
+*.war
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# Gradle wrapper
+gradle/wrapper/gradle-wrapper.jar

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tally-postgres
+    environment:
+      POSTGRES_DB: tally
+      POSTGRES_USER: tally
+      POSTGRES_PASSWORD: tally_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      # 数据持久化
+      - postgres_data:/var/lib/postgresql/data
+      # 初始化数据库Schema
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tally"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tally-network
+
+networks:
+  tally-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
