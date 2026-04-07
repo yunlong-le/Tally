@@ -4,10 +4,8 @@ import { createOpenAI } from '@ai-sdk/openai';
  * kimi-k2.5 是 thinking 模型，Vercel AI SDK 重构多步消息历史时不保留 reasoning_content，
  * 导致 Moonshot API 拒绝第二步请求（"reasoning_content is missing"）。
  *
- * 【实验性修复】使用占位符 "." 代替真实 reasoning_content。
- * 假设：多步工具调用中，模型下一步的决策由 tool_result 驱动，
- *       而非上一步的推理内容，因此占位符不影响输出质量。
- * 如果实验证明需要真实内容，再改回完整的流式拦截方案。
+ * 【修复】使用占位符 "." 代替真实 reasoning_content。
+ * 多步工具调用中，模型下一步的决策由 tool_result 驱动，占位符不影响输出质量。
  */
 
 interface MoonshotMessage {

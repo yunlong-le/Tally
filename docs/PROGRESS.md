@@ -2,11 +2,12 @@
 
 > 新 session 进入时请先读此文件，再读对应 `docs/phases/` 文件获取详细上下文。
 
-## 项目状态：✅ Phase 4.7 验证完成，进入 Phase 5
+## 项目状态：Phase 5 进行中（待真机验证）
 
 **最后更新**：2026-04-07  
 **当前阶段**：Phase 5 — 集成与打磨  
-**Phase 4.7 验证结果**：✅ 全部通过（聊天、日历 Bridge、费用 Bridge、预填消息发送、Tab 切换消息保留）
+**Phase 5 完成项**：Tavily 网络搜索接入、WebView 错误处理、深色主题 CSS 统一、HIGHLIGHTS.md  
+**Phase 5 待做项**：6 个 Demo 场景真机验证、Phase 1-4 回归测试
 
 ---
 
@@ -53,7 +54,7 @@
 |------|-----------|------|
 | 2026-04-06 | Android 语言 | Kotlin（Compose 仅支持 Kotlin）|
 | 2026-04-06 | AI 模型 | kimi-k2.5（用户指定，OpenAI-compatible）|
-| 2026-04-06 | 网络搜索 | Kimi 内置搜索，不用 Tavily |
+| 2026-04-07 | 网络搜索 | 改用 Tavily（Kimi 不支持 web_search 工具类型，会 400）；Tavily 1000 次/月免费 |
 | 2026-04-06 | kimi-k2.5 多步工具调用兼容性 | 需在 fetch 拦截器中为 assistant 消息注入 `reasoning_content: "."` 占位符，空字符串不行 |
 | 2026-04-06 | reasoning_content 是否需要真实内容 | 否，`"."` 占位符足够，tool_result 驱动下一步决策 |
 | 2026-04-06 | WSL 真机调试方式 | `adb reverse tcp:3000 tcp:3000`（Windows PowerShell 执行），后端监听 `0.0.0.0` |
