@@ -93,7 +93,17 @@ export default function ExpenseView() {
         {expenses.length > 0 ? (
           <ul>
             {expenses.map(expense => (
-              <li key={expense.id} className="expense-item">
+              <li
+                key={expense.id}
+                className="expense-item"
+                onClick={() => {
+                  const date = new Date(expense.expenseDate).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                  const categoryStr = expense.category ? `，分类：${expense.category}` : '';
+                  const msg = `帮我分析这笔消费：${expense.description}，金额 ¥${expense.amount.toFixed(2)}，日期${date}${categoryStr}`;
+                  (window as any).Android?.navigateToChat(msg);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="expense-info">
                   <div className="expense-description">{expense.description}</div>
                   <div className="expense-meta">

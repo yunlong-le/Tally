@@ -34,7 +34,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.webkit.WebViewAssetLoader
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tally.app.ui.chat.ChatScreen
+import com.tally.app.ui.chat.ChatViewModel
 
 sealed class Screen(val route: String, val label: String, val icon: @Composable () -> Unit) {
     object Chat : Screen("chat", "聊天", { Icon(Icons.Default.Home, contentDescription = "聊天") })
@@ -47,6 +49,7 @@ val bottomNavItems = listOf(Screen.Chat, Screen.Calendar, Screen.Expense)
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
+    val chatViewModel: ChatViewModel = viewModel()
 
     Scaffold(
         bottomBar = {
@@ -79,13 +82,25 @@ fun NavGraph() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Chat.route) {
-                ChatScreen()
+                ChatScreen(vm = chatViewModel)
             }
             composable(Screen.Calendar.route) {
-                WebViewScreen(route = "calendar")
+                WebViewScreen(route = "calendar") { message ->
+                    chatViewModel.prefillInput(message)
+                    navController.navigate(Screen.Chat.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                        launchSingleTop = true
+                    }
+                }
             }
             composable(Screen.Expense.route) {
-                WebViewScreen(route = "expense")
+                WebViewScreen(route = "expense") { message ->
+                    chatViewModel.prefillInput(message)
+                    navController.navigate(Screen.Chat.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                        launchSingleTop = true
+                    }
+                }
             }
         }
     }
@@ -93,7 +108,7 @@ fun NavGraph() {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun WebViewScreen(route: String) {
+private fun WebViewScreen(route: String, onNavigateToChat: (String) -> Unit) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -176,6 +191,9 @@ private fun WebViewScreen(route: String) {
                     builtInZoomControls = false
                     mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 }
+
+                val bridge = TallyJsBridge(onNavigateToChat)
+                addJavascriptInterface(bridge, "Android")
 
                 loadUrl("https://appassets.androidplatform.net/assets/www/index.html#/$route")
             }

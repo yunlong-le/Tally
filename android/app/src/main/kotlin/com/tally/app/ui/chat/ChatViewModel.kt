@@ -28,6 +28,10 @@ class ChatViewModel : ViewModel() {
         _uiState.update { it.copy(inputText = text) }
     }
 
+    fun prefillInput(text: String) {
+        _uiState.update { it.copy(inputText = text) }
+    }
+
     fun sendMessage() {
         val text = _uiState.value.inputText.trim()
         if (text.isEmpty() || _uiState.value.isLoading) return

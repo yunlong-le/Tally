@@ -2,11 +2,11 @@
 
 > 新 session 进入时请先读此文件，再读对应 `docs/phases/` 文件获取详细上下文。
 
-## 项目状态：✅ Phase 4 完成，下一步 Phase 5
+## 项目状态：✅ Phase 4.7 验证完成，进入 Phase 5
 
-**最后更新**：2026-04-06 17:55  
+**最后更新**：2026-04-07  
 **当前阶段**：Phase 5 — 集成与打磨  
-**下一个任务**：4.7 Android WebView Bridge（可选）或直接进入 Phase 5 Demo 场景验证
+**Phase 4.7 验证结果**：✅ 全部通过（聊天、日历 Bridge、费用 Bridge、预填消息发送、Tab 切换消息保留）
 
 ---
 
@@ -43,6 +43,7 @@
 - ✅ 4.2 WebView UI（React + Vite，日历视图 + 费用视图，构建到 Android assets）
 - ✅ 4.3 Android WebView 接入（webkit 依赖，NavGraph 替换为 WebViewScreen）
 - ✅ 4.4 真机验证（截图确认：日历月历网格 + 点击日期显示事件；费用总计 + 详情列表；聊天 AI 查询日程。月份切换、断线重连等未测试）
+- ✅ 4.7 WebView Bridge 验证（2026-04-07）：日历/费用点击 → 跳转聊天 + 预填上下文消息，发送正常，AI 回复正常，Tab 切换消息历史保留
 
 ---
 
@@ -58,6 +59,7 @@
 | 2026-04-06 | WSL 真机调试方式 | `adb reverse tcp:3000 tcp:3000`（Windows PowerShell 执行），后端监听 `0.0.0.0` |
 | 2026-04-06 | OkHttp 流读取 | 用 `response.use{}` + 捕获 `IOException`，不用 `source.exhausted()` |
 | 2026-04-06 | WebView ES module in Android | `type="module" crossorigin` 在 Android WebView + WebViewAssetLoader 下不可靠；解决方案：vite.config.ts 加自定义 plugin 去掉 `type="module"` 和 `crossorigin`，改为 IIFE 格式 + `defer`，同时 NavGraph 加 `mixedContentMode = MIXED_CONTENT_ALWAYS_ALLOW` |
+| 2026-04-07 | Phase 4.7 WebView Bridge | 验证通过：日历/费用点击跳转聊天 + 预填上下文，消息发送正常，Tab 切换历史保留 |
 
 ---
 

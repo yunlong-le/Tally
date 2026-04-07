@@ -109,7 +109,17 @@ export default function CalendarView() {
           {eventsOnSelectedDate.length > 0 ? (
             <ul>
               {eventsOnSelectedDate.map(event => (
-                <li key={event.id} className="event-item">
+                <li
+                  key={event.id}
+                  className="event-item"
+                  onClick={() => {
+                    const date = selectedDate?.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+                    const time = new Date(event.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                    const msg = `帮我查看${date}的日程「${event.title}」，时间是${time}`;
+                    (window as any).Android?.navigateToChat(msg);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="event-title">{event.title}</div>
                   <div className="event-time">
                     {new Date(event.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
