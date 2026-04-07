@@ -34,9 +34,9 @@ async function kimiCompatFetch(
       return fetch(url, options);
     }
 
+    // assistant 消息含 tool_calls 但缺 reasoning_content 时注入占位符
     if (Array.isArray(body.messages)) {
       const patched = body.messages.map((msg) => {
-        // assistant 消息含 tool_calls 但缺 reasoning_content 时注入占位符
         if (
           msg.role === 'assistant' &&
           Array.isArray(msg.tool_calls) &&

@@ -162,6 +162,20 @@ private fun WebViewScreen(route: String, onNavigateToChat: (String) -> Unit) {
                     ) {
                         if (request?.isForMainFrame == true) {
                             Log.e("WebViewNav", "onReceivedError: ${error?.errorCode} ${error?.description} url=${request.url}")
+                            val errorHtml = """
+                                <html>
+                                <body style="background:#111111;color:#ffffff;text-align:center;padding:60px 20px;font-family:sans-serif">
+                                  <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+                                  <h2 style="color:#ffffff;margin-bottom:8px">加载失败</h2>
+                                  <p style="color:#888888;margin-bottom:32px">${error?.description ?: "网络连接错误"}</p>
+                                  <button onclick="location.reload()"
+                                    style="background:#1DB954;color:#000000;border:none;padding:12px 32px;border-radius:24px;font-size:16px;cursor:pointer">
+                                    重新加载
+                                  </button>
+                                </body>
+                                </html>
+                            """.trimIndent()
+                            view?.loadData(errorHtml, "text/html", "utf-8")
                         }
                     }
 

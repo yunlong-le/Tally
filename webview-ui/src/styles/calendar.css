@@ -56,7 +56,7 @@
 }
 
 .day:hover {
-  background: #242424;
+  background: #1E1E1E;
   border-color: var(--color-green);
 }
 
@@ -74,7 +74,7 @@
 .day.selected {
   background: var(--color-green);
   border-color: var(--color-green);
-  color: #000;
+  color: #FFFFFF;
 }
 
 .day.has-events .day-number {
@@ -97,7 +97,7 @@
 }
 
 .day.selected .event-dot {
-  background: #000;
+  background: #111111;
 }
 
 .event-list {
@@ -118,7 +118,7 @@
 
 .event-item {
   padding: 12px;
-  background: rgba(29, 185, 84, 0.1);
+  background: rgba(29, 185, 84, 0.15);
   border-left: 3px solid var(--color-green);
   margin-bottom: 12px;
   border-radius: 4px;
