@@ -12,3 +12,14 @@ data class ChatMessage(
     val content: String,
     val status: MessageStatus = MessageStatus.DONE,
 )
+
+/**
+ * 对话会话（历史记录）
+ */
+data class ChatSession(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String,
+    val messages: List<ChatMessage> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+)

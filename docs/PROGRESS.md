@@ -2,12 +2,22 @@
 
 > 新 session 进入时请先读此文件，再读对应 `docs/phases/` 文件获取详细上下文。
 
-## 项目状态：Phase 5 进行中（待真机验证）
+## 项目状态：Phase 5 ✅ 已完成（2026-04-08）
 
-**最后更新**：2026-04-07  
-**当前阶段**：Phase 5 — 集成与打磨  
-**Phase 5 完成项**：Tavily 网络搜索接入、WebView 错误处理、深色主题 CSS 统一、HIGHLIGHTS.md  
-**Phase 5 待做项**：6 个 Demo 场景真机验证、Phase 1-4 回归测试
+**最后更新**：2026-04-08  
+**当前阶段**：Phase 6 — 阿里云部署（待规划）  
+**Phase 5 完成情况**：
+- ✅ Tavily 网络搜索接入
+- ✅ WebView 错误处理  
+- ✅ 深色主题 CSS 统一
+- ✅ HIGHLIGHTS.md 求职亮点文档
+- ✅ 6 个 Demo 场景真机验证通过
+- ✅ Phase 1-4 回归测试通过
+
+**Phase 5 Bug 修复记录**：
+- 迭代 1：日历时区、选中样式、系统日期、状态栏 padding、Markdown 渲染、新对话按钮
+- 迭代 2：样式优先级、表格渲染、布局重叠、对话历史功能
+- 迭代 3：表格边框、顶部/底部栏高度优化、输入法重叠修复、App 图标
 
 ---
 
@@ -19,7 +29,8 @@
 | Phase 2 | Agent 核心 | ✅ 完成 | [phase2_agent_core.md](phases/phase2_agent_core.md) |
 | Phase 3 | Android 聊天界面 | ✅ 完成 | [phase3_android_chat.md](phases/phase3_android_chat.md) |
 | Phase 4 | WebView 日历/费用视图 | ✅ 完成 | [phase4_webview_ui.md](phases/phase4_webview_ui.md) |
-| Phase 5 | 集成与打磨 | ⬜ 待开始 | [phase5_integration.md](phases/phase5_integration.md) |
+| Phase 5 | 集成与打磨 | ✅ 完成 | [phase5_integration.md](phases/phase5_integration.md) |
+| Phase 6 | 阿里云部署 | ⬜ 规划中 | [phase6_deployment.md](phases/phase6_deployment.md) |
 
 ---
 
@@ -61,6 +72,7 @@
 | 2026-04-06 | OkHttp 流读取 | 用 `response.use{}` + 捕获 `IOException`，不用 `source.exhausted()` |
 | 2026-04-06 | WebView ES module in Android | `type="module" crossorigin` 在 Android WebView + WebViewAssetLoader 下不可靠；解决方案：vite.config.ts 加自定义 plugin 去掉 `type="module"` 和 `crossorigin`，改为 IIFE 格式 + `defer`，同时 NavGraph 加 `mixedContentMode = MIXED_CONTENT_ALWAYS_ALLOW` |
 | 2026-04-07 | Phase 4.7 WebView Bridge | 验证通过：日历/费用点击跳转聊天 + 预填上下文，消息发送正常，Tab 切换历史保留 |
+| 2026-04-08 | Phase 5 完成 | 6 个 Demo 场景真机验证通过，Phase 1-4 回归测试通过 |
 
 ---
 

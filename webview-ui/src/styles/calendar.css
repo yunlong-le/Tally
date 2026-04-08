@@ -77,14 +77,26 @@
   color: #FFFFFF;
 }
 
-.day.has-events .day-number {
-  font-weight: 600;
-  color: var(--color-green);
+.day.selected .day-number {
+  color: #111111;
+  font-weight: 700;
 }
 
 .day-number {
   font-size: 14px;
   font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.day.has-events .day-number {
+  font-weight: 600;
+  color: var(--color-green);
+}
+
+/* 选中状态必须放在 has-events 之后以覆盖其颜色 */
+.day.selected .day-number {
+  color: #111111 !important;
+  font-weight: 700;
 }
 
 .event-dot {

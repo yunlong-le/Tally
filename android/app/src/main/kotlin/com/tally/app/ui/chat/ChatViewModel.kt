@@ -3,6 +3,7 @@ package com.tally.app.ui.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tally.app.data.model.ChatMessage
+import com.tally.app.data.model.ChatSession
 import com.tally.app.data.model.MessageRole
 import com.tally.app.data.model.MessageStatus
 import com.tally.app.data.remote.TallyApiClient
@@ -17,6 +18,9 @@ data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
     val isLoading: Boolean = false,
+    val sessions: List<ChatSession> = emptyList(),
+    val currentSessionId: String? = null,
+    val showHistory: Boolean = false,
 )
 
 class ChatViewModel : ViewModel() {
@@ -32,9 +36,123 @@ class ChatViewModel : ViewModel() {
         _uiState.update { it.copy(inputText = text) }
     }
 
+    /**
+     * 创建新对话
+     */
+    fun createNewChat() {
+        // 先保存当前对话（如果有消息）
+        saveCurrentSession()
+        // 清空当前对话
+        _uiState.update { state ->
+            state.copy(
+                messages = emptyList(),
+                inputText = "",
+                currentSessionId = null,
+                showHistory = false
+            )
+        }
+    }
+
+    /**
+     * 切换对话历史显示
+     */
+    fun toggleHistory() {
+        _uiState.update { it.copy(showHistory = !it.showHistory) }
+    }
+
+    /**
+     * 加载指定会话
+     */
+    fun loadSession(sessionId: String) {
+        val session = _uiState.value.sessions.find { it.id == sessionId }
+        session?.let {
+            _uiState.update { state ->
+                state.copy(
+                    messages = it.messages,
+                    currentSessionId = it.id,
+                    showHistory = false
+                )
+            }
+        }
+    }
+
+    /**
+     * 删除会话
+     */
+    fun deleteSession(sessionId: String) {
+        _uiState.update { state ->
+            val updatedSessions = state.sessions.filter { it.id != sessionId }
+            val newCurrentId = if (state.currentSessionId == sessionId) null else state.currentSessionId
+            state.copy(
+                sessions = updatedSessions,
+                currentSessionId = newCurrentId
+            )
+        }
+    }
+
+    /**
+     * 保存当前会话到历史
+     */
+    private fun saveCurrentSession() {
+        val currentState = _uiState.value
+        if (currentState.messages.isNotEmpty()) {
+            val title = generateSessionTitle(currentState.messages)
+            val existingSession = currentState.sessions.find { it.id == currentState.currentSessionId }
+
+            if (existingSession != null) {
+                // 更新现有会话
+                _uiState.update { state ->
+                    state.copy(
+                        sessions = state.sessions.map { session ->
+                            if (session.id == existingSession.id) {
+                                session.copy(
+                                    messages = currentState.messages,
+                                    title = title,
+                                    updatedAt = System.currentTimeMillis()
+                                )
+                            } else session
+                        }
+                    )
+                }
+            } else {
+                // 创建新会话
+                val newSession = ChatSession(
+                    title = title,
+                    messages = currentState.messages
+                )
+                _uiState.update { state ->
+                    state.copy(
+                        sessions = listOf(newSession) + state.sessions,
+                        currentSessionId = newSession.id
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * 生成会话标题（取第一条用户消息的前 12 个字符）
+     */
+    private fun generateSessionTitle(messages: List<ChatMessage>): String {
+        val firstUserMessage = messages.find { it.role == MessageRole.USER }
+        return firstUserMessage?.content?.take(12)?.let {
+            if (firstUserMessage.content.length > 12) "$it..." else it
+        } ?: "新对话"
+    }
+
+    fun clearChat() {
+        saveCurrentSession()
+        _uiState.update { ChatUiState(sessions = it.sessions) }
+    }
+
     fun sendMessage() {
         val text = _uiState.value.inputText.trim()
         if (text.isEmpty() || _uiState.value.isLoading) return
+
+        // 如果是第一条消息，先保存当前空会话（如果有的话），开始新会话
+        if (_uiState.value.messages.isEmpty()) {
+            saveCurrentSession()
+        }
 
         // 追加用户消息
         val userMsg = ChatMessage(role = MessageRole.USER, content = text)

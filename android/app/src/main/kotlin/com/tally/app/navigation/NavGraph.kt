@@ -13,7 +13,11 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.DateRange
@@ -53,14 +57,28 @@ fun NavGraph() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier.height(56.dp), // 紧凑高度
+                tonalElevation = 0.dp
+            ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
                 bottomNavItems.forEach { screen ->
                     NavigationBarItem(
-                        icon = screen.icon,
-                        label = { Text(screen.label) },
+                        icon = {
+                            Icon(
+                                imageVector = when (screen) {
+                                    Screen.Chat -> Icons.Default.Home
+                                    Screen.Calendar -> Icons.Default.DateRange
+                                    Screen.Expense -> Icons.Default.ShoppingCart
+                                    else -> Icons.Default.Home
+                                },
+                                contentDescription = screen.label,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        label = { Text(screen.label, fontSize = 11.sp) },
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
                             navController.navigate(screen.route) {
@@ -70,7 +88,8 @@ fun NavGraph() {
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        }
+                        },
+                        alwaysShowLabel = true
                     )
                 }
             }

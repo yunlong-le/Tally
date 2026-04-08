@@ -3,6 +3,14 @@ import { Event } from '../types';
 import { fetchEvents } from '../api/client';
 import '../styles/calendar.css';
 
+// 使用本地时间格式，避免 toISOString() 的 UTC 转换问题
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
@@ -33,8 +41,8 @@ export default function CalendarView() {
 
   useEffect(() => {
     setLoading(true);
-    const startAfter = startOfMonth(currentMonth).toISOString();
-    const startBefore = endOfMonth(currentMonth).toISOString();
+    const startAfter = formatLocalDate(startOfMonth(currentMonth)) + 'T00:00:00+08:00';
+    const startBefore = formatLocalDate(endOfMonth(currentMonth)) + 'T23:59:59+08:00';
     fetchEvents(startAfter, startBefore)
       .then(setEvents)
       .catch(err => console.error('Failed to fetch events:', err))
@@ -53,9 +61,9 @@ export default function CalendarView() {
   const firstDay = firstDayOfMonth(currentMonth);
 
   // 获取选中日期的事件
-  const selectedDateStr = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+  const selectedDateStr = selectedDate ? formatLocalDate(selectedDate) : null;
   const eventsOnSelectedDate = selectedDateStr
-    ? events.filter(e => e.startTime.split('T')[0] === selectedDateStr)
+    ? events.filter(e => e.startTime.slice(0, 10) === selectedDateStr)
     : [];
 
   return (
@@ -85,9 +93,9 @@ export default function CalendarView() {
           {Array.from({ length: days }).map((_, i) => {
             const day = i + 1;
             const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-            const dateStr = date.toISOString().split('T')[0];
-            const dayEvents = events.filter(e => e.startTime.split('T')[0] === dateStr);
-            const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
+            const dateStr = formatLocalDate(date);
+            const dayEvents = events.filter(e => e.startTime.slice(0, 10) === dateStr);
+            const isSelected = selectedDate && formatLocalDate(selectedDate) === dateStr;
 
             return (
               <div
