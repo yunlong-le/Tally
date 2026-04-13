@@ -12,10 +12,18 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
@@ -56,49 +64,65 @@ fun NavGraph() {
     val chatViewModel: ChatViewModel = viewModel()
 
     Scaffold(
+        // 禁用 Scaffold 自动处理 WindowInsets，由各子组件自行处理
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            NavigationBar(
-                modifier = Modifier.height(56.dp), // 紧凑高度
-                tonalElevation = 0.dp
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
+            Column(modifier = Modifier.fillMaxWidth()) {
+                NavigationBar(
+                    // 关闭 NavigationBar 自带 inset 处理，由外层 Spacer 单独补系统导航栏高度
+                    // 58dp 内容高度对齐主流 App（Spotify / 微信级别），比 Material 3 默认 80dp 更紧凑
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(62.dp),
+                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    tonalElevation = 0.dp
+                ) {
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
 
-                bottomNavItems.forEach { screen ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = when (screen) {
-                                    Screen.Chat -> Icons.Default.Home
-                                    Screen.Calendar -> Icons.Default.DateRange
-                                    Screen.Expense -> Icons.Default.ShoppingCart
-                                    else -> Icons.Default.Home
-                                },
-                                contentDescription = screen.label,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        },
-                        label = { Text(screen.label, fontSize = 11.sp) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                    bottomNavItems.forEach { screen ->
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    imageVector = when (screen) {
+                                        Screen.Chat -> Icons.Default.Home
+                                        Screen.Calendar -> Icons.Default.DateRange
+                                        Screen.Expense -> Icons.Default.ShoppingCart
+                                        else -> Icons.Default.Home
+                                    },
+                                    contentDescription = screen.label,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            label = { Text(screen.label, fontSize = 10.sp) },
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        alwaysShowLabel = true
-                    )
+                            },
+                            alwaysShowLabel = true
+                        )
+                    }
                 }
+                // 补系统手势/导航栏高度，确保不被遮挡
+                Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
             }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = Screen.Chat.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                // 只处理底部（NavigationBar 高度），顶部由各页面的 statusBarsPadding 处理
+                .padding(bottom = innerPadding.calculateBottomPadding())
+                // 告知子组件 innerPadding 已被自己消耗，imePadding() 只补键盘超出 tab 栏的部分
+                .consumeWindowInsets(innerPadding)
         ) {
             composable(Screen.Chat.route) {
                 ChatScreen(vm = chatViewModel)
@@ -129,7 +153,9 @@ fun NavGraph() {
 @Composable
 private fun WebViewScreen(route: String, onNavigateToChat: (String) -> Unit) {
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         factory = { context ->
             // 允许 chrome://inspect 远程调试
             WebView.setWebContentsDebuggingEnabled(true)
@@ -218,8 +244,10 @@ private fun WebViewScreen(route: String, onNavigateToChat: (String) -> Unit) {
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
-                    allowFileAccess = false
-                    allowContentAccess = false
+                    allowFileAccess = true
+                    allowContentAccess = true
+                    allowUniversalAccessFromFileURLs = true
+                    allowFileAccessFromFileURLs = true
                     setSupportZoom(false)
                     builtInZoomControls = false
                     mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW

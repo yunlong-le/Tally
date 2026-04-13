@@ -2,10 +2,26 @@
 
 > 新 session 进入时请先读此文件，再读对应 `docs/phases/` 文件获取详细上下文。
 
-## 项目状态：Phase 5 ✅ 已完成（2026-04-08）
+## 项目状态：Phase 6 🟡 部署中（2026-04-13）
 
-**最后更新**：2026-04-08  
-**当前阶段**：Phase 6 — 阿里云部署（待规划）  
+**最后更新**：2026-04-13  
+**当前阶段**：Phase 6 — 阿里云部署（进行中）+ UI 细节打磨
+
+**Phase 6 完成情况**：
+- ✅ ECS 服务器配置（Docker、docker-compose）
+- ✅ 后端服务部署（Nginx + Node.js + PostgreSQL）
+- ✅ 安全组配置（80端口开放）
+- ✅ Nginx 安全配置（限流、防扫描）
+- ✅ 数据库 migrations 执行
+- ✅ API Key 配置
+- ✅ Android BASE_URL 修改为公网 IP
+- ✅ WebView CORS 配置（mixedContentMode）
+- ✅ WebView 前端 BASE_URL 修改
+- 🟡 聊天功能正常
+- 🟡 新建日程功能正常
+- ❌ 日历页面显示（前端错误显示已添加，待验证）
+- ❌ 费用页面显示（前端错误显示已添加，待验证）
+- ❌ Bug：补充标题后 App 卡住退出（待排查）  
 **Phase 5 完成情况**：
 - ✅ Tavily 网络搜索接入
 - ✅ WebView 错误处理  
@@ -30,7 +46,7 @@
 | Phase 3 | Android 聊天界面 | ✅ 完成 | [phase3_android_chat.md](phases/phase3_android_chat.md) |
 | Phase 4 | WebView 日历/费用视图 | ✅ 完成 | [phase4_webview_ui.md](phases/phase4_webview_ui.md) |
 | Phase 5 | 集成与打磨 | ✅ 完成 | [phase5_integration.md](phases/phase5_integration.md) |
-| Phase 6 | 阿里云部署 | ⬜ 规划中 | [phase6_deployment.md](phases/phase6_deployment.md) |
+| Phase 6 | 阿里云部署 | 🟡 待实施 | [phase6_deployment.md](phases/phase6_deployment.md) |
 
 ---
 
@@ -73,6 +89,38 @@
 | 2026-04-06 | WebView ES module in Android | `type="module" crossorigin` 在 Android WebView + WebViewAssetLoader 下不可靠；解决方案：vite.config.ts 加自定义 plugin 去掉 `type="module"` 和 `crossorigin`，改为 IIFE 格式 + `defer`，同时 NavGraph 加 `mixedContentMode = MIXED_CONTENT_ALWAYS_ALLOW` |
 | 2026-04-07 | Phase 4.7 WebView Bridge | 验证通过：日历/费用点击跳转聊天 + 预填上下文，消息发送正常，Tab 切换历史保留 |
 | 2026-04-08 | Phase 5 完成 | 6 个 Demo 场景真机验证通过，Phase 1-4 回归测试通过 |
+| 2026-04-08 | Phase 6 调研 | 阿里云ECS环境调研完成：Docker已安装，2核2G，待部署 |
+| 2026-04-10 | UI重构完成 | ChatScreen重构Gemini风格，4个Insets/键盘问题全部修复 |
+| 2026-04-11 | Phase 6 部署 | 后端部署完成，公网IP: 8.140.192.167，聊天功能正常 |
+| 2026-04-11 | Bug待修复 | 新建日程补充标题后App卡住退出（需Windows端Claude排查）|
+| 2026-04-13 | 键盘空白 bug 彻底修复 | 两阶段修复：① Manifest 加 `adjustResize`（减半）→ ② NavHost 加 `consumeWindowInsets(innerPadding)`（完全消除）|
+| 2026-04-13 | 导航栏高度优化 | Material 3 默认 80dp → 62dp；图标 22→20dp；标签 11→10sp；系统导航区用独立 Spacer 补高 |
+
+---
+
+## UI重构完成（2026-04-10）
+
+### 完成项
+
+| # | 问题描述 | 状态 |
+|---|---------|------|
+| 1 | 日历/费用页面顶部与状态栏间距不一致 | ✅ 已修复 |
+| 2 | 底部导航栏被页面内容遮挡 | ✅ 已修复 |
+| 3 | 输入框与软键盘之间有巨大空白 | ✅ 已修复（2026-04-13 彻底修复，两阶段：adjustResize + consumeWindowInsets）|
+| 4 | 历史页面搜索框无法弹出输入法 | ✅ 已修复 |
+
+- ✅ ChatScreen 重构为 Gemini 风格（顶部栏、垂直快捷按钮、悬浮输入框）
+- ✅ 主题更新：深色背景 #111111、品牌绿 #1DB954、大圆角设计
+- ✅ WebView 日历/费用样式统一（24px圆角、胶囊型Chips）
+
+### 关键代码位置
+
+```
+android/app/src/main/kotlin/com/tally/app/
+├── navigation/NavGraph.kt          # Scaffold, bottomBar, WebViewScreen
+├── ui/chat/ChatScreen.kt           # TopBar, SimpleInputBar, HistorySidebar
+└── MainActivity.kt                 # enableEdgeToEdge, windowInsets配置
+```
 
 ---
 
