@@ -35,3 +35,14 @@ android/gradle/
 
 # TypeScript
 *.tsbuildinfo
+
+# Windows Zone.Identifier files
+*:Zone.Identifier
+
+# Claude checkpoints
+.claude/checkpoints.log
+
+# Large media files
+design_reference/*.mp4
+design_reference/*.mov
+design_reference/*.avi
