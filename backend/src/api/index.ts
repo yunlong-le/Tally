@@ -10,7 +10,7 @@ import expensesRouter from './routes/expenses';
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // ============================================================================
 // 中间件配置

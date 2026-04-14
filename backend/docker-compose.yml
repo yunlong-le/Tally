@@ -4,22 +4,62 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: tally-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: tally
-      POSTGRES_USER: tally
-      POSTGRES_PASSWORD: tally_dev_password
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-tally}
+      POSTGRES_USER: ${POSTGRES_USER:-tally}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      # 数据持久化
       - postgres_data:/var/lib/postgresql/data
-      # 初始化数据库Schema
-      - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tally"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tally}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - tally-network
+
+  backend:
+    build: .
+    container_name: tally-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-tally}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-tally}
+      KIMI_API_KEY: ${KIMI_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - tally-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: tally-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - tally-network
 
@@ -29,4 +69,3 @@ networks:
 
 volumes:
   postgres_data:
-    driver: local

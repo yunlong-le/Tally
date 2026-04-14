@@ -10,15 +10,10 @@ import com.tally.app.ui.theme.TallyTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 使用 WindowInsets 处理系统栏，避免内容与状态栏/导航栏重叠
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
-            val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        // 设置状态栏颜色
-        window.statusBarColor = android.graphics.Color.parseColor("#121212")
-        window.navigationBarColor = android.graphics.Color.parseColor("#121212")
+
+        // enableEdgeToEdge 会自动设置 setDecorFitsSystemWindows(false) 和透明系统栏
+        // 不要在此再设置 window.statusBarColor / navigationBarColor，否则会覆盖透明设置
+        enableEdgeToEdge()
 
         setContent {
             TallyTheme {

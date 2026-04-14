@@ -1,6 +1,6 @@
 import { Event, Expense, ApiResponse } from '../types';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://8.140.192.167';
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`);

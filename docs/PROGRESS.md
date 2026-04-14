@@ -95,6 +95,7 @@
 | 2026-04-11 | Bug待修复 | 新建日程补充标题后App卡住退出（需Windows端Claude排查）|
 | 2026-04-13 | 键盘空白 bug 彻底修复 | 两阶段修复：① Manifest 加 `adjustResize`（减半）→ ② NavHost 加 `consumeWindowInsets(innerPadding)`（完全消除）|
 | 2026-04-13 | 导航栏高度优化 | Material 3 默认 80dp → 62dp；图标 22→20dp；标签 11→10sp；系统导航区用独立 Spacer 补高 |
+| 2026-04-13 | 对话历史持久化 | 使用 DataStore + Gson 存储会话历史，进程被杀死后历史不丢失 |
 
 ---
 

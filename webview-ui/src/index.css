@@ -1,11 +1,18 @@
+/* Gemini风格深色主题 - 与Android统一 */
 :root {
   --color-bg: #111111;
-  --color-card: #1e1e1e;
-  --color-text-primary: #ffffff;
+  --color-surface: #1e1e1e;
+  --color-surface-variant: #2c2c2c;
+  --color-text-primary: #e3e3e3;
   --color-text-secondary: #888888;
-  --color-green: #1db954;
+  --color-primary: #1db954;
+  --color-outline: #444444;
   --color-border: #333333;
   --color-red: #ff4444;
+
+  /* 兼容旧变量 */
+  --color-card: var(--color-surface);
+  --color-green: var(--color-primary);
 }
 
 * {
@@ -52,8 +59,9 @@ button:hover {
 }
 
 h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 36px;
 }
 
 h2 {

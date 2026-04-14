@@ -32,15 +32,27 @@ export default function ExpenseView() {
   const [month, setMonth] = useState(new Date());
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadExpenses = () => {
     setLoading(true);
+    setError(null);
     const startDate = formatDate(startOfMonth(month));
     const endDate = formatDate(endOfMonth(month));
     fetchExpenses(startDate, endDate)
-      .then(setExpenses)
-      .catch(err => console.error('Failed to fetch expenses:', err))
+      .then(data => {
+        setExpenses(data);
+      })
+      .catch(err => {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setError('加载失败: ' + errMsg);
+        console.error('Failed to fetch expenses:', err);
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadExpenses();
   }, [month]);
 
   const handlePrevMonth = () => {
@@ -73,6 +85,25 @@ export default function ExpenseView() {
 
       {loading && <p className="loading">加载中...</p>}
 
+      {error && (
+        <div className="error-container" style={{ padding: '16px', background: '#ff444422', borderRadius: '8px', margin: '16px 0' }}>
+          <p style={{ color: '#ff6666', margin: '0 0 8px 0' }}>{error}</p>
+          <button
+            onClick={loadExpenses}
+            style={{
+              padding: '8px 16px',
+              background: '#1DB954',
+              color: '#000',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            重试
+          </button>
+        </div>
+      )}
+
       <div className="summary-card">
         <div className="total">
           <span className="label">总支出</span>
@@ -80,7 +111,7 @@ export default function ExpenseView() {
         </div>
         <div className="categories">
           {Object.entries(byCategory).map(([category, items]) => (
-            <div key={category} className="category-summary">
+            <div key={category} className="category-chip">
               <span className="category-name">{category}</span>
               <span className="category-amount">¥{items.reduce((s, e) => s + e.amount, 0).toFixed(2)}</span>
             </div>
@@ -96,13 +127,6 @@ export default function ExpenseView() {
               <li
                 key={expense.id}
                 className="expense-item"
-                onClick={() => {
-                  const date = new Date(expense.expenseDate).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
-                  const categoryStr = expense.category ? `，分类：${expense.category}` : '';
-                  const msg = `帮我分析这笔消费：${expense.description}，金额 ¥${expense.amount.toFixed(2)}，日期${date}${categoryStr}`;
-                  (window as any).Android?.navigateToChat(msg);
-                }}
-                style={{ cursor: 'pointer' }}
               >
                 <div className="expense-info">
                   <div className="expense-description">{expense.description}</div>
@@ -111,6 +135,17 @@ export default function ExpenseView() {
                     <span className="date">
                       {new Date(expense.expenseDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}
                     </span>
+                  </div>
+                  <div
+                    className="ask-ai-chip"
+                    onClick={() => {
+                      const date = new Date(expense.expenseDate).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                      const categoryStr = expense.category ? `，分类：${expense.category}` : '';
+                      const msg = `帮我分析这笔消费：${expense.description}，金额 ¥${expense.amount.toFixed(2)}，日期${date}${categoryStr}`;
+                      (window as any).Android?.navigateToChat(msg);
+                    }}
+                  >
+                    🤖 问AI
                   </div>
                 </div>
                 <div className="expense-amount">¥{expense.amount.toFixed(2)}</div>

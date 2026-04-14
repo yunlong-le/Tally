@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit
  */
 object TallyApiClient {
 
-    // adb reverse tcp:3000 tcp:3000 将手机 localhost:3000 隧道到 WSL 后端
-    private const val BASE_URL = "http://localhost:3000"
+    // 阿里云 ECS 生产环境
+    private const val BASE_URL = "http://8.140.192.167"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)

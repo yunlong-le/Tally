@@ -80,6 +80,9 @@ dependencies {
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
 
+    // DataStore - 本地数据持久化
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     // 调试工具
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -20,7 +20,7 @@ export const webSearchTool = tool({
       .default(3)
       .describe('返回结果数量，默认 3'),
   }),
-  execute: async ({ query, maxResults = 3 }) => {
+  execute: async ({ query, maxResults = 3 }: { query: string; maxResults?: number }) => {
     const apiKey = process.env.TAVILY_API_KEY;
     if (!apiKey || apiKey === 'your_tavily_api_key_here') {
       return { error: 'TAVILY_API_KEY 未配置，无法执行网络搜索' };
@@ -34,7 +34,7 @@ export const webSearchTool = tool({
       });
 
       return {
-        results: response.results.map((r) => ({
+        results: response.results.map((r: { title: string; url: string; content: string; publishedDate?: string }) => ({
           title: r.title,
           url: r.url,
           content: r.content,

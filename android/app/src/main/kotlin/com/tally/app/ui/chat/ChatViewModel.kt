@@ -1,12 +1,14 @@
 package com.tally.app.ui.chat
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tally.app.data.model.ChatMessage
 import com.tally.app.data.model.ChatSession
 import com.tally.app.data.model.MessageRole
 import com.tally.app.data.model.MessageStatus
 import com.tally.app.data.remote.TallyApiClient
+import com.tally.app.data.repository.ChatSessionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,10 +25,20 @@ data class ChatUiState(
     val showHistory: Boolean = false,
 )
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val repository = ChatSessionRepository(application)
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+
+    init {
+        // 从本地存储加载会话历史
+        viewModelScope.launch {
+            val savedSessions = repository.loadSessions()
+            _uiState.update { it.copy(sessions = savedSessions) }
+        }
+    }
 
     fun onInputChange(text: String) {
         _uiState.update { it.copy(inputText = text) }
@@ -88,10 +100,14 @@ class ChatViewModel : ViewModel() {
                 currentSessionId = newCurrentId
             )
         }
+        // 保存到本地
+        viewModelScope.launch {
+            repository.saveSessions(_uiState.value.sessions)
+        }
     }
 
     /**
-     * 保存当前会话到历史
+     * 保存当前会话到历史并持久化
      */
     private fun saveCurrentSession() {
         val currentState = _uiState.value
@@ -99,20 +115,16 @@ class ChatViewModel : ViewModel() {
             val title = generateSessionTitle(currentState.messages)
             val existingSession = currentState.sessions.find { it.id == currentState.currentSessionId }
 
-            if (existingSession != null) {
+            val updatedSessions = if (existingSession != null) {
                 // 更新现有会话
-                _uiState.update { state ->
-                    state.copy(
-                        sessions = state.sessions.map { session ->
-                            if (session.id == existingSession.id) {
-                                session.copy(
-                                    messages = currentState.messages,
-                                    title = title,
-                                    updatedAt = System.currentTimeMillis()
-                                )
-                            } else session
-                        }
-                    )
+                currentState.sessions.map { session ->
+                    if (session.id == existingSession.id) {
+                        session.copy(
+                            messages = currentState.messages,
+                            title = title,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                    } else session
                 }
             } else {
                 // 创建新会话
@@ -120,12 +132,20 @@ class ChatViewModel : ViewModel() {
                     title = title,
                     messages = currentState.messages
                 )
-                _uiState.update { state ->
-                    state.copy(
-                        sessions = listOf(newSession) + state.sessions,
-                        currentSessionId = newSession.id
-                    )
-                }
+                listOf(newSession) + currentState.sessions
+            }
+
+            _uiState.update { state ->
+                val newSessionId = existingSession?.id ?: updatedSessions.first().id
+                state.copy(
+                    sessions = updatedSessions,
+                    currentSessionId = newSessionId
+                )
+            }
+
+            // 异步保存到本地存储
+            viewModelScope.launch {
+                repository.saveSessions(updatedSessions)
             }
         }
     }
@@ -204,6 +224,9 @@ class ChatViewModel : ViewModel() {
                 MessageStatus.DONE,
             )
             _uiState.update { it.copy(isLoading = false) }
+
+            // 对话完成后自动保存
+            saveCurrentSession()
         }
     }
 

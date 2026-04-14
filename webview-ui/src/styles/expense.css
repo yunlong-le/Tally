@@ -2,24 +2,45 @@
   max-width: 100%;
 }
 
+/* Gemini风格顶部栏 */
 .expense-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   gap: 16px;
 }
 
 .expense-header h1 {
   flex: 1;
   text-align: center;
+  color: var(--color-text-primary);
 }
 
+/* 导航按钮 - 圆形 */
+.btn-nav {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface-variant);
+  color: var(--color-text-primary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.btn-nav:hover {
+  background: var(--color-outline);
+}
+
+/* 统计卡片 - 大圆角 */
 .summary-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: 24px;
+  padding: 24px;
   margin-bottom: 24px;
 }
 
@@ -27,9 +48,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-outline);
 }
 
 .total .label {
@@ -38,24 +59,26 @@
 }
 
 .total .amount {
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 700;
-  color: var(--color-green);
+  color: var(--color-primary);
 }
 
+/* 分类摘要 - 胶囊型Chips */
 .categories {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.category-summary {
-  background: rgba(29, 185, 84, 0.15);
-  padding: 12px;
-  border-radius: 6px;
+.category-chip {
+  background: var(--color-surface-variant);
+  padding: 10px 16px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  min-width: 100px;
 }
 
 .category-name {
@@ -66,19 +89,21 @@
 .category-amount {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-green);
+  color: var(--color-primary);
 }
 
+/* 消费列表 */
 .expense-list {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: 24px;
+  padding: 20px;
 }
 
 .expense-list h2 {
   margin-bottom: 16px;
-  color: var(--color-green);
+  color: var(--color-text-primary);
+  font-size: 18px;
 }
 
 .expense-list ul {
@@ -89,12 +114,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: 16px;
+  background: var(--color-surface-variant);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: transform 0.2s ease;
 }
 
 .expense-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.expense-item:hover {
+  transform: translateX(4px);
 }
 
 .expense-info {
@@ -102,9 +134,10 @@
 }
 
 .expense-description {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 6px;
+  font-size: 15px;
 }
 
 .expense-meta {
@@ -115,10 +148,11 @@
 
 .category-badge {
   font-size: 11px;
-  background: rgba(29, 185, 84, 0.25);
-  color: var(--color-green);
-  padding: 2px 6px;
-  border-radius: 3px;
+  background: rgba(29, 185, 84, 0.2);
+  color: var(--color-primary);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
 }
 
 .date {
@@ -132,4 +166,23 @@
   color: var(--color-text-primary);
   min-width: 80px;
   text-align: right;
+}
+
+/* 问AI按钮 */
+.ask-ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(29, 185, 84, 0.15);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--color-primary);
+  margin-top: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ask-ai-chip:hover {
+  background: rgba(29, 185, 84, 0.25);
 }

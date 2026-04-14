@@ -2,37 +2,37 @@ package com.tally.app.ui.chat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -40,46 +40,26 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.tally.app.R
 import com.tally.app.data.model.ChatMessage
 import com.tally.app.data.model.MessageRole
 import com.tally.app.data.model.MessageStatus
-import com.tally.app.ui.theme.TallyBorder
-import com.tally.app.ui.theme.TallyCardBackground
-import com.tally.app.ui.theme.TallyDarkBackground
-import com.tally.app.ui.theme.TallyGreen
-import com.tally.app.ui.theme.TallyTextPrimary
-import com.tally.app.ui.theme.TallyTextSecondary
+import com.tally.app.ui.theme.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ChatScreen(vm: ChatViewModel = viewModel()) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    // 新消息时自动滚到底部
     LaunchedEffect(uiState.messages.size, uiState.messages.lastOrNull()?.content) {
         if (uiState.messages.isNotEmpty()) {
             listState.animateScrollToItem(uiState.messages.lastIndex)
@@ -91,42 +71,52 @@ fun ChatScreen(vm: ChatViewModel = viewModel()) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(TallyDarkBackground)
+                .imePadding() // 键盘弹起时整个 Column 收缩，输入框自动上移
         ) {
-            // 顶部标题栏
             TopBar(
                 onNewChat = vm::createNewChat,
                 onToggleHistory = vm::toggleHistory,
                 showHistory = uiState.showHistory
             )
 
-            // 消息列表
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(uiState.messages, key = { it.id }) { message ->
-                    MessageBubble(message)
+            Box(modifier = Modifier.weight(1f)) {
+                if (uiState.messages.isEmpty()) {
+                    EmptyHomeView(
+                        onQuickAction = { action ->
+                            vm.onInputChange(action)
+                            vm.sendMessage()
+                        }
+                    )
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(uiState.messages, key = { it.id }) { message ->
+                            MessageBubble(message)
+                        }
+                    }
                 }
             }
 
-            // 输入栏
-            InputBar(
+            SimpleInputBar(
                 text = uiState.inputText,
                 isLoading = uiState.isLoading,
                 onTextChange = vm::onInputChange,
-                onSend = vm::sendMessage,
+                onSend = {
+                    keyboardController?.hide()
+                    vm.sendMessage()
+                },
             )
         }
 
-        // 历史侧边栏（类似 ChatGPT App）
         if (uiState.showHistory) {
             HistorySidebar(
                 sessions = uiState.sessions,
                 currentSessionId = uiState.currentSessionId,
                 onLoadSession = vm::loadSession,
-                onDeleteSession = vm::deleteSession,
                 onDismiss = vm::toggleHistory
             )
         }
@@ -142,65 +132,388 @@ private fun TopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp) // 固定紧凑高度
-            .padding(horizontal = 8.dp),
+            .statusBarsPadding()
+            .height(48.dp)
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        // 历史按钮
         IconButton(
             onClick = onToggleHistory,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(40.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Menu,
-                contentDescription = "历史对话",
-                tint = if (showHistory) TallyGreen else TallyTextSecondary,
-                modifier = Modifier.size(22.dp)
+                contentDescription = "菜单",
+                tint = if (showHistory) TallyGreen else TallyTextPrimary,
+                modifier = Modifier.size(24.dp)
             )
         }
 
         Text(
-            text = "Tally 对位",
+            text = "Tally",
+            style = MaterialTheme.typography.titleLarge,
             color = TallyTextPrimary,
-            fontSize = 16.sp,
         )
 
-        // 新对话按钮
         IconButton(
             onClick = onNewChat,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(40.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "新对话",
                 tint = TallyGreen,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
     }
 }
 
-/**
- * Markdown 渲染数据类
- */
+@Composable
+private fun EmptyHomeView(
+    onQuickAction: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "你好",
+            style = MaterialTheme.typography.headlineMedium,
+            color = TallyTextPrimary,
+        )
+        Text(
+            text = "需要我为你做些什么？",
+            style = MaterialTheme.typography.headlineMedium,
+            color = TallyTextPrimary,
+            modifier = Modifier.padding(bottom = 40.dp)
+        )
+
+        QuickActionButton(
+            icon = "📅",
+            label = "查看日程",
+            onClick = { onQuickAction("帮我查看今天的日程安排") }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        QuickActionButton(
+            icon = "💰",
+            label = "记录支出",
+            onClick = { onQuickAction("我想记录一笔支出") }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        QuickActionButton(
+            icon = "📊",
+            label = "日程分析",
+            onClick = { onQuickAction("分析我这周的日程安排") }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        QuickActionButton(
+            icon = "💵",
+            label = "费用统计",
+            onClick = { onQuickAction("统计我这个月的消费情况") }
+        )
+    }
+}
+
+@Composable
+private fun QuickActionButton(
+    icon: String,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(TallySurfaceVariant)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = icon, fontSize = 20.sp)
+        Text(
+            text = label,
+            color = TallyTextPrimary,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun SimpleInputBar(
+    text: String,
+    isLoading: Boolean,
+    onTextChange: (String) -> Unit,
+    onSend: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(TallyDarkBackground)
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 40.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(TallySurfaceVariant)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 使用 BasicTextField 替代 TextField 以获得更精确的控制
+            val keyboardController = LocalSoftwareKeyboardController.current
+            BasicTextField(
+                value = text,
+                onValueChange = onTextChange,
+                modifier = Modifier.weight(1f),
+                textStyle = TextStyle(
+                    color = TallyTextPrimary,
+                    fontSize = 15.sp,
+                    lineHeight = 20.sp
+                ),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (text.isEmpty()) {
+                            Text(
+                                text = "问问 Tally",
+                                color = TallyTextSecondary,
+                                fontSize = 15.sp,
+                                lineHeight = 20.sp
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Send,
+                ),
+                keyboardActions = KeyboardActions(onSend = {
+                    keyboardController?.hide()
+                    onSend()
+                }),
+                singleLine = true,
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(TallyGreen),
+            )
+
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = TallyGreen,
+                    strokeWidth = 2.dp
+                )
+            } else if (text.isNotBlank()) {
+                IconButton(
+                    onClick = onSend,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Send,
+                        contentDescription = "发送",
+                        tint = TallyGreen,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistorySidebar(
+    sessions: List<com.tally.app.data.model.ChatSession>,
+    currentSessionId: String?,
+    onLoadSession: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable(onClick = onDismiss)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(300.dp)
+                .background(TallyDarkBackground)
+                // pointerInput 消耗触摸事件，防止穿透到外层遮罩的 clickable(onDismiss)
+                // 同时允许子组件（BasicTextField）正常接收事件获取焦点
+                .pointerInput(Unit) { detectTapGestures { } }
+                .statusBarsPadding()
+                .padding(top = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "关闭",
+                        tint = TallyTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(TallySurfaceVariant)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "搜索",
+                    tint = TallyTextSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+                // 搜索输入框 - 使用BasicTextField获得更好控制
+                BasicTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focusRequester),
+                    textStyle = TextStyle(
+                        color = TallyTextPrimary,
+                        fontSize = 14.sp
+                    ),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (searchQuery.isEmpty()) {
+                                Text(
+                                    text = "搜索对话",
+                                    color = TallyTextSecondary,
+                                    fontSize = 14.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        imeAction = ImeAction.Search,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
+                    ),
+                    singleLine = true,
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(TallyGreen),
+                )
+
+                // 点击搜索区域请求焦点
+                LaunchedEffect(Unit) {
+                    // 确保搜索框可聚焦
+                }
+            }
+
+            Text(
+                text = "对话",
+                color = TallyTextSecondary,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+            )
+
+            val filteredSessions = sessions.filter {
+                it.title.contains(searchQuery, ignoreCase = true)
+            }
+
+            if (filteredSessions.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (searchQuery.isEmpty()) "暂无历史对话" else "未找到匹配对话",
+                        color = TallyTextSecondary,
+                        fontSize = 14.sp
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(filteredSessions, key = { it.id }) { session ->
+                        val isSelected = session.id == currentSessionId
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) TallyGreen.copy(alpha = 0.15f) else Color.Transparent)
+                                .clickable { onLoadSession(session.id) }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Create,
+                                    contentDescription = null,
+                                    tint = if (isSelected) TallyGreen else TallyTextSecondary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = session.title,
+                                    fontSize = 14.sp,
+                                    color = TallyTextPrimary,
+                                    fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 private sealed class MarkdownElement {
     data class Text(val content: AnnotatedString) : MarkdownElement()
     data class CodeBlock(val language: String, val code: String) : MarkdownElement()
     data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownElement()
 }
 
-/**
- * Markdown 解析器
- * 支持：粗体、斜体、代码、删除线、标题、代码块、表格
- */
 private fun parseMarkdownElements(text: String): List<MarkdownElement> {
     val elements = mutableListOf<MarkdownElement>()
     var remaining = text
 
     while (remaining.isNotEmpty()) {
         when {
-            // 代码块 ```
             remaining.startsWith("```") -> {
                 val end = remaining.indexOf("```", 3)
                 if (end != -1) {
@@ -215,7 +528,6 @@ private fun parseMarkdownElements(text: String): List<MarkdownElement> {
                     remaining = remaining.drop(3)
                 }
             }
-            // 表格（简化检测：包含 | 的行）
             remaining.contains("|\n") && remaining.contains("|-") -> {
                 val tableEnd = remaining.indexOf("\n\n").takeIf { it > 0 } ?: remaining.length
                 val tableLines = remaining.substring(0, tableEnd).lines()
@@ -246,15 +558,11 @@ private fun parseMarkdownElements(text: String): List<MarkdownElement> {
     return elements
 }
 
-/**
- * 行内 Markdown 解析
- */
 private fun parseInlineMarkdown(text: String): AnnotatedString {
     return buildAnnotatedString {
         var i = 0
         while (i < text.length) {
             when {
-                // 行内代码 `
                 text[i] == '`' -> {
                     val end = text.indexOf('`', i + 1)
                     if (end != -1 && end > i + 1) {
@@ -271,7 +579,6 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
                         i++
                     }
                 }
-                // 粗体 **
                 text.startsWith("**", i) -> {
                     val end = text.indexOf("**", i + 2)
                     if (end != -1 && end > i + 2) {
@@ -284,7 +591,6 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
                         i++
                     }
                 }
-                // 斜体 * (但不是 **)
                 text[i] == '*' && (i + 1 >= text.length || text[i + 1] != '*') -> {
                     val end = text.indexOf('*', i + 1)
                     if (end != -1 && end > i + 1) {
@@ -297,7 +603,6 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
                         i++
                     }
                 }
-                // 删除线 ~~
                 text.startsWith("~~", i) -> {
                     val end = text.indexOf("~~", i + 2)
                     if (end != -1 && end > i + 2) {
@@ -310,7 +615,6 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
                         i++
                     }
                 }
-                // 标题 #
                 text[i] == '#' && (i == 0 || text[i - 1] == '\n') -> {
                     val end = text.indexOf('\n', i)
                     val line = if (end != -1) text.substring(i, end) else text.substring(i)
@@ -342,123 +646,6 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
     }
 }
 
-/**
- * 渲染表格（参考 Gemini 样式，带边框线）
- */
-@Composable
-private fun MarkdownTable(headers: List<String>, rows: List<List<String>>) {
-    val columnCount = headers.size
-    val allRows = listOf(headers) + rows
-
-    // 计算每列最大宽度（基于字符数）
-    val columnWidths = (0 until columnCount).map { colIndex ->
-        allRows.maxOf { row ->
-            row.getOrElse(colIndex) { "" }.length
-        }.coerceAtLeast(3) // 最小宽度 3
-    }
-
-    // 表格外边框
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF2A2A2A), RoundedCornerShape(8.dp))
-            .border(1.dp, Color(0xFF444444), RoundedCornerShape(8.dp))
-    ) {
-        allRows.forEachIndexed { rowIndex, row ->
-            // 行背景色 - 表头更深
-            val bgColor = when {
-                rowIndex == 0 -> Color(0xFF3A3A3A) // 表头深色背景
-                rowIndex % 2 == 1 -> Color(0xFF2A2A2A) // 奇数行
-                else -> Color(0xFF252525) // 偶数行交替色
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(bgColor)
-                    .then(
-                        if (rowIndex == 0) {
-                            Modifier.clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                        } else if (rowIndex == allRows.size - 1) {
-                            Modifier.clip(RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
-                        } else Modifier
-                    ),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                row.forEachIndexed { colIndex, cell ->
-                    val width = columnWidths.getOrElse(colIndex) { 10 }
-                    // 右填充空格以对齐
-                    val displayText = cell.padEnd(width).take(width)
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(
-                                width = 0.5.dp,
-                                color = Color(0xFF444444),
-                                shape = if (colIndex == 0 && rowIndex == 0) {
-                                    RoundedCornerShape(topStart = 8.dp)
-                                } else if (colIndex == row.size - 1 && rowIndex == 0) {
-                                    RoundedCornerShape(topEnd = 8.dp)
-                                } else RectangleShape
-                            )
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = displayText,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            fontWeight = if (rowIndex == 0) FontWeight.Bold else FontWeight.Normal,
-                            color = if (rowIndex == 0) Color(0xFFDDDDDD) else TallyTextPrimary,
-                            lineHeight = 14.sp
-                        )
-                    }
-                }
-            }
-
-            // 表头下方加粗分隔线
-            if (rowIndex == 0) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(Color(0xFF555555))
-                )
-            }
-        }
-    }
-}
-
-/**
- * 渲染代码块
- */
-@Composable
-private fun CodeBlock(language: String, code: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF1E1E1E), RoundedCornerShape(8.dp))
-            .padding(12.dp)
-    ) {
-        if (language.isNotEmpty()) {
-            Text(
-                text = language,
-                fontSize = 11.sp,
-                color = TallyTextSecondary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-        Text(
-            text = code,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-            color = Color(0xFFD4D4D4),
-            lineHeight = 18.sp
-        )
-    }
-}
-
 @Composable
 private fun MessageBubble(message: ChatMessage) {
     val isUser = message.role == MessageRole.USER
@@ -482,13 +669,11 @@ private fun MessageBubble(message: ChatMessage) {
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
             if (message.status == MessageStatus.STREAMING && message.content.isEmpty()) {
-                // 空 AI 消息 → 显示加载点
                 ThinkingIndicator()
             } else {
                 val textColor = if (message.status == MessageStatus.ERROR) Color(0xFFFF6B6B)
                     else if (isUser) Color.Black else TallyTextPrimary
 
-                // AI 消息使用增强 Markdown 渲染
                 if (!isUser && message.status != MessageStatus.ERROR) {
                     val elements = parseMarkdownElements(message.content)
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -527,88 +712,80 @@ private fun MessageBubble(message: ChatMessage) {
 }
 
 @Composable
-private fun HistorySidebar(
-    sessions: List<com.tally.app.data.model.ChatSession>,
-    currentSessionId: String?,
-    onLoadSession: (String) -> Unit,
-    onDeleteSession: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    // 遮罩层（点击关闭）
-    Box(
+private fun CodeBlock(language: String, code: String) {
+    Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
-            .clickable(onClick = onDismiss)
+            .fillMaxWidth()
+            .background(Color(0xFF1E1E1E), RoundedCornerShape(8.dp))
+            .padding(12.dp)
     ) {
-        // 侧边栏
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(280.dp)
-                .background(TallyCardBackground)
-                .clickable(enabled = false) { } // 阻止点击穿透
-                .padding(top = 48.dp)
-        ) {
+        if (language.isNotEmpty()) {
             Text(
-                text = "历史对话",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = TallyTextPrimary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                text = language,
+                fontSize = 11.sp,
+                color = TallyTextSecondary,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+        }
+        Text(
+            text = code,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+            color = Color(0xFFD4D4D4),
+            lineHeight = 18.sp
+        )
+    }
+}
 
-            if (sessions.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "暂无历史对话",
-                        color = TallyTextSecondary,
-                        fontSize = 14.sp
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(sessions, key = { it.id }) { session ->
-                        val isSelected = session.id == currentSessionId
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) TallyGreen.copy(alpha = 0.2f) else Color.Transparent)
-                                .clickable { onLoadSession(session.id) }
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = session.title,
-                                fontSize = 14.sp,
-                                color = if (isSelected) TallyGreen else TallyTextPrimary,
-                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                                maxLines = 1,
-                                modifier = Modifier.weight(1f)
-                            )
+@Composable
+private fun MarkdownTable(headers: List<String>, rows: List<List<String>>) {
+    val columnCount = headers.size
+    val allRows = listOf(headers) + rows
 
-                            // 删除按钮
-                            IconButton(
-                                onClick = { onDeleteSession(session.id) },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "删除",
-                                    tint = TallyTextSecondary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
+    val columnWidths = (0 until columnCount).map { colIndex ->
+        allRows.maxOf { row ->
+            row.getOrElse(colIndex) { "" }.length
+        }.coerceAtLeast(3)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF2A2A2A), RoundedCornerShape(8.dp))
+            .border(1.dp, Color(0xFF444444), RoundedCornerShape(8.dp))
+    ) {
+        allRows.forEachIndexed { rowIndex, row ->
+            val bgColor = when {
+                rowIndex == 0 -> Color(0xFF3A3A3A)
+                rowIndex % 2 == 1 -> Color(0xFF2A2A2A)
+                else -> Color(0xFF252525)
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(bgColor),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                row.forEachIndexed { colIndex, cell ->
+                    val width = columnWidths.getOrElse(colIndex) { 10 }
+                    val displayText = cell.padEnd(width).take(width)
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(0.5.dp, Color(0xFF444444))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = displayText,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            fontWeight = if (rowIndex == 0) FontWeight.Bold else FontWeight.Normal,
+                            color = if (rowIndex == 0) Color(0xFFDDDDDD) else TallyTextPrimary,
+                            lineHeight = 14.sp
+                        )
                     }
                 }
             }
@@ -630,76 +807,6 @@ private fun ThinkingIndicator() {
                     .clip(CircleShape)
                     .background(TallyTextSecondary)
             )
-        }
-    }
-}
-
-@Composable
-private fun InputBar(
-    text: String,
-    isLoading: Boolean,
-    onTextChange: (String) -> Unit,
-    onSend: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(TallyCardBackground)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        TextField(
-            value = text,
-            onValueChange = onTextChange,
-            modifier = Modifier.weight(1f),
-            placeholder = { Text("说点什么…", color = TallyTextSecondary, fontSize = 15.sp) },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = TallyBorder,
-                unfocusedContainerColor = TallyBorder,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = TallyTextPrimary,
-                unfocusedTextColor = TallyTextPrimary,
-                cursorColor = TallyGreen,
-            ),
-            shape = RoundedCornerShape(24.dp),
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Send,
-            ),
-            keyboardActions = KeyboardActions(onSend = { onSend() }),
-            maxLines = 4,
-            singleLine = false,
-        )
-
-        // 发送按钮 / 加载指示
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(if (text.isNotBlank() && !isLoading) TallyGreen else TallyBorder),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = TallyGreen,
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                IconButton(
-                    onClick = onSend,
-                    enabled = text.isNotBlank(),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_send),
-                        contentDescription = "发送",
-                        tint = if (text.isNotBlank()) Color.Black else TallyTextSecondary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
         }
     }
 }

@@ -38,15 +38,31 @@ export default function CalendarView() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadEvents = () => {
     setLoading(true);
+    setError(null);
     const startAfter = formatLocalDate(startOfMonth(currentMonth)) + 'T00:00:00+08:00';
     const startBefore = formatLocalDate(endOfMonth(currentMonth)) + 'T23:59:59+08:00';
     fetchEvents(startAfter, startBefore)
-      .then(setEvents)
-      .catch(err => console.error('Failed to fetch events:', err))
+      .then(data => {
+        setEvents(data);
+      })
+      .catch(err => {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setError('加载失败: ' + errMsg + '\nURL: ' + BASE_URL);
+        console.error('Failed to fetch events:', err);
+        // 详细日志
+        console.log('Fetch URL:', `${BASE_URL}/api/events?...`);
+        console.log('Error type:', err?.constructor?.name);
+        console.log('Error stack:', err?.stack);
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadEvents();
   }, [currentMonth]);
 
   const handlePrevMonth = () => {
@@ -75,6 +91,25 @@ export default function CalendarView() {
       </div>
 
       {loading && <p className="loading">加载中...</p>}
+
+      {error && (
+        <div className="error-container" style={{ padding: '16px', background: '#ff444422', borderRadius: '8px', margin: '16px 0' }}>
+          <p style={{ color: '#ff6666', margin: '0 0 8px 0' }}>{error}</p>
+          <button
+            onClick={loadEvents}
+            style={{
+              padding: '8px 16px',
+              background: '#1DB954',
+              color: '#000',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            重试
+          </button>
+        </div>
+      )}
 
       <div className="month-grid">
         <div className="weekdays">
@@ -120,13 +155,6 @@ export default function CalendarView() {
                 <li
                   key={event.id}
                   className="event-item"
-                  onClick={() => {
-                    const date = selectedDate?.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
-                    const time = new Date(event.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-                    const msg = `帮我查看${date}的日程「${event.title}」，时间是${time}`;
-                    (window as any).Android?.navigateToChat(msg);
-                  }}
-                  style={{ cursor: 'pointer' }}
                 >
                   <div className="event-title">{event.title}</div>
                   <div className="event-time">
@@ -140,6 +168,17 @@ export default function CalendarView() {
                   </div>
                   {event.location && <div className="event-location">📍 {event.location}</div>}
                   {event.description && <div className="event-description">{event.description}</div>}
+                  <div
+                    className="ask-ai-chip"
+                    onClick={() => {
+                      const date = selectedDate?.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+                      const time = new Date(event.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                      const msg = `帮我查看${date}的日程「${event.title}」，时间是${time}`;
+                      (window as any).Android?.navigateToChat(msg);
+                    }}
+                  >
+                    🤖 问AI
+                  </div>
                 </li>
               ))}
             </ul>
