@@ -46,3 +46,23 @@ android/gradle/
 design_reference/*.mp4
 design_reference/*.mov
 design_reference/*.avi
+
+# Design reference materials (not source code)
+design_reference/
+debug-img/
+
+# Claude Code auxiliary documents (session/progress tracking)
+docs/
+CLAUDE.md
+
+# Development process files (not needed in published repo)
+ANDROID_PHASE1_SUMMARY.md
+BACKEND_CREATED.md
+IMPLEMENTATION_COMPLETE.md
+PHASE1_DELIVERABLES.md
+VERIFICATION_PROMPT.md
+WINDOWS_CLAUDE_PROMPT.txt
+Tally消耗统计.md
+
+# Backup files
+*.bak
