@@ -19,6 +19,33 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 
 ---
 
+## 应用截图
+
+<table>
+  <tr>
+    <td align="center"><b>AI 助手欢迎界面</b></td>
+    <td align="center"><b>自然语言创建日程</b></td>
+    <td align="center"><b>自然语言记录费用</b></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/01_chat_welcome.jpg" width="220"/></td>
+    <td><img src="screenshots/02_chat_create_event.jpg" width="220"/></td>
+    <td><img src="screenshots/03_chat_record_expense.jpg" width="220"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>月历视图（含日程）</b></td>
+    <td align="center"><b>日历即时同步新日程</b></td>
+    <td align="center"><b>费用汇总 + 分类统计</b></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/04_calendar_view.jpg" width="220"/></td>
+    <td><img src="screenshots/05_calendar_event_created.jpg" width="220"/></td>
+    <td><img src="screenshots/06_expense_view.jpg" width="220"/></td>
+  </tr>
+</table>
+
+---
+
 ## 系统架构
 
 ```
@@ -32,8 +59,7 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 │         │                  └───────────────────┘             │
 │         │           TallyJsBridge (@JavascriptInterface)      │
 │  ChatViewModel ◄─────────────────┘                           │
-│  (StateFlow)                                                  │
-│         │  TallyApiClient（OkHttp 流式 SSE）                   │
+│  (StateFlow)    TallyApiClient（OkHttp 流式 SSE）              │
 └─────────┼────────────────────────────────────────────────────┘
           │ POST /api/chat（Vercel AI Data Stream 协议）
           │
@@ -54,10 +80,9 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 │  │  · checkConflict  │  └──────────────┬──────────────┘      │
 │  └──────────┬─────── ┘                 │                     │
 │             └──────────────┬───────────┘                     │
-│                            │                                  │
 │  ┌─────────────────────────▼────────────────────────────┐   │
 │  │           PostgreSQL 16（Docker）                      │   │
-│  │    events · expenses · event_expense_links           │   │
+│  │    events · expenses · event_expense_links            │   │
 │  └────────────────────────────────────────────────────────┘  │
 │  kimiCompatFetch 拦截器（注入 reasoning_content 占位符）       │
 └──────────────────────────────────────────────────────────────┘
@@ -75,13 +100,12 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 |------|------|------|
 | Kotlin | 1.9.22 | 主开发语言 |
 | Jetpack Compose | BOM 2024.02.00 | 声明式 UI |
-| Material 3 | — | 设计系统（深色主题 #111111 + 品牌绿 #1DB954） |
+| Material 3 | — | 深色主题（#111111 + 品牌绿 #1DB954） |
 | Jetpack Navigation | 2.7.6 | 三 Tab 路由管理 |
 | ViewModel + StateFlow | 2.7.0 | 响应式状态管理 |
 | OkHttp | 4.12.0 | 流式 SSE HTTP 客户端 |
 | DataStore + Gson | 1.0.0 / 2.10.1 | 会话历史持久化 |
 | androidx.webkit | 1.12.1 | WebView 增强 |
-| Coroutines | 1.7.3 | 异步任务调度 |
 | Min SDK | API 26 | Android 8.0+ |
 
 ### 后端服务
@@ -92,19 +116,18 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 | Express | 4.18.2 | HTTP 服务框架 |
 | Vercel AI SDK | 4.3.15 | streamText + 工具调用编排 |
 | @ai-sdk/openai | 1.3.22 | OpenAI-compatible 适配器（接 Kimi） |
-| Kimi-k2.5 | — | 月之暗面，推理型大语言模型 |
+| Kimi-k2.5 | — | 月之暗面推理型大模型 |
 | @tavily/core | 0.7.2 | 联网搜索工具 |
 | pg | 8.11.3 | PostgreSQL 原生客户端 |
-| Zod | 3.22.4 | Schema 验证 |
-| Docker + Nginx | — | 容器化部署 + 反向代理限流 |
+| Docker + Nginx | — | 容器化部署 + 反向代理 |
 
 ### WebView UI
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
-| React | 18.3.1 | 日历 / 费用视图组件 |
+| React | 18.3.1 | 日历 / 费用视图 |
 | TypeScript | 5.6.3 | 类型安全 |
-| Vite | 6.0.6 | 构建工具（IIFE 输出模式，兼容 Android WebView） |
+| Vite | 6.0.6 | 构建工具（IIFE 模式，兼容 Android WebView） |
 
 ---
 
@@ -114,12 +137,12 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 |------|------|
 | 💬 **自然语言对话** | 用中文描述日程和费用，AI 自动解析时间、金额、关联关系 |
 | 📅 **智能日程管理** | 新建、修改、删除日程；自动检测时间冲突并提示 |
-| 💰 **费用追踪** | 记录消费并关联至具体日程事件（如出差代驾报销） |
-| 🔍 **联网搜索** | Tavily API 查询实时信息（活动日期等），自动创建日程 |
-| 📊 **日历 / 费用视图** | WebView 内嵌 React 月历网格 + 费用列表，点击条目自动跳转 AI 对话 |
+| 💰 **费用追踪** | 记录消费并关联至具体日程事件（如出差报销） |
+| 🔍 **联网搜索** | Tavily API 查询实时信息，自动创建日程 |
+| 📊 **日历 / 费用视图** | WebView 月历网格 + 费用列表，点击条目自动跳转 AI 对话 |
 | 🌊 **流式实时响应** | AI 回复字符级流式显示，体验接近 ChatGPT |
-| 💾 **会话历史持久化** | DataStore + Gson 存储会话，App 重启后历史不丢失 |
-| 🚀 **公网部署** | 后端部署至阿里云 ECS，Nginx 反向代理 + 限流配置 |
+| 💾 **会话历史持久化** | DataStore + Gson，App 重启后历史不丢失 |
+| 🚀 **公网部署** | 后端已部署至阿里云 ECS，Nginx 反向代理 + 限流 |
 
 ---
 
@@ -134,7 +157,7 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 | 5 | "出差代驾200块，帮我记录并关联出差行程" | `createExpense` → `linkExpenseToEvent` | 跨域 Agent 协作（费用+日程） |
 | 6 | "今天给团队买咖啡花了150，帮我记一下" | `createExpense` | 费用域单步，金额自然语言解析 |
 
-> **场景 3、4 是核心压力测试**：场景 3 要求 Orchestrator 动态决策调用次数；场景 4 是三步依赖链，每步输出作为下一步输入。两个场景的稳定运行直接依赖下方 kimi-k2.5 兼容性攻坚成果。
+> **场景 3、4 是核心压力测试**：场景 3 要求 Orchestrator 动态决策调用次数；场景 4 是三步依赖链，每步输出作为下一步输入。两个场景的稳定运行直接依赖 kimi-k2.5 兼容性攻坚成果。
 
 ---
 
@@ -142,11 +165,9 @@ Tally 是一款 **AI 原生 Android 应用**，用户通过自然语言对话即
 
 ### 亮点 1：kimi-k2.5 多步工具调用兼容性攻坚
 
-**问题背景**：Vercel AI SDK 的 `streamText(maxSteps=N)` 在多步工具调用时，会重建消息历史传给下一步。kimi-k2.5 是思考型模型，要求每条 `assistant` 消息必须携带 `reasoning_content` 字段；SDK 重建的历史消息中该字段丢失，导致 Kimi 返回 HTTP 400。
+**问题**：Vercel AI SDK `streamText(maxSteps=N)` 重建消息历史时，kimi-k2.5 要求的 `reasoning_content` 字段丢失，导致 HTTP 400。空字符串同样触发 400，必须非空占位符。
 
-**根因**：SDK 不感知第三方模型对 `reasoning_content` 的强制要求；空字符串 `""` 同样触发 400，必须是非空占位符；多步链中每条历史 assistant 消息都需修复。
-
-**解决方案**：自定义 `kimiCompatFetch` 拦截器，在 `fetch` 层拦截请求，遍历 `messages` 数组并注入占位符：
+**解决**：自定义 `kimiCompatFetch` 拦截器，在 fetch 层注入占位符：
 
 ```typescript
 // backend/src/agents/kimiClient.ts
@@ -154,7 +175,7 @@ const kimiCompatFetch: FetchFunction = async (url, options) => {
   const body = JSON.parse(options.body as string);
   body.messages = body.messages.map((msg: Message) => {
     if (msg.role === "assistant" && !msg.reasoning_content) {
-      return { ...msg, reasoning_content: "." }; // 非空占位符，空串会 400
+      return { ...msg, reasoning_content: "." };
     }
     return msg;
   });
@@ -162,65 +183,38 @@ const kimiCompatFetch: FetchFunction = async (url, options) => {
 };
 ```
 
-**验证**：`checkConflict → createEvent`（2步）、`listEvents → deleteEvent × N`（N+1步）稳定运行，无 400 错误。
+**验证**：`checkConflict → createEvent`（2步）、`listEvents → deleteEvent × N`（N+1步）稳定运行。
 
 ---
 
 ### 亮点 2：Android WebView ES Module 兼容性
 
-**问题背景**：使用 `WebViewAssetLoader` 加载本地 React 打包产物时，Vite 默认生成带 `type="module" crossorigin` 的 `<script>` 标签，在 Android WebView 下导致**页面白屏**且无任何 JS 错误输出。
+**问题**：Vite 默认生成 `type="module" crossorigin` 的 script 标签，在 Android WebView + WebViewAssetLoader 下白屏无报错。
 
-**解决方案**（三步组合）：
-
-```typescript
-// webview-ui/vite.config.ts — 自定义 plugin 后处理 index.html
-{
-  name: 'remove-module-type',
-  transformIndexHtml(html) {
-    return html
-      .replace(/type="module"/g, '')
-      .replace(/crossorigin/g, '')
-      .replace(/<script /g, '<script defer ');
-  }
-}
-```
-
-① Vite plugin 去除 `type="module"` 和 `crossorigin`，改为带 `defer` 的普通脚本  
-② 构建输出格式从 ESM 改为 **IIFE**，消除模块依赖  
-③ NavGraph 增加 `mixedContentMode = MIXED_CONTENT_ALWAYS_ALLOW`
+**解决**（三步组合）：① Vite plugin 去除 `type="module"` 和 `crossorigin`，改为 `defer` 普通脚本；② 构建改为 IIFE 格式；③ 开启 `MIXED_CONTENT_ALWAYS_ALLOW`。
 
 ---
 
 ### 亮点 3：WebView Bridge 跨层通信
 
-**完整调用链**：
-
 ```
 WebView JS（React）
-  └─ window.TallyBridge.openChat(contextMessage)
+  └─ window.TallyBridge.openChat(msg)
        └─ @JavascriptInterface（TallyJsBridge.kt）
-            └─ Handler(Looper.getMainLooper()).post { }   ← 切回主线程
+            └─ Handler(Looper.getMainLooper()).post { }   ← 必须切回主线程
                  └─ chatViewModel.prefillMessage(msg)
                       └─ navController.navigate("chat")
 ```
-
-**关键细节**：`@JavascriptInterface` 由 WebView 在后台线程调用，必须通过 `Handler(Looper.getMainLooper())` 切回主线程才能操作 ViewModel。共享 `ChatViewModel` 在 Tab 切换时保持消息历史。
 
 ---
 
 ### 亮点 4：WSL2 真机调试网络隔离突破
 
-**链路**：后端在 WSL2 Linux 中，真机通过 USB 连接 Windows，两者网络命名空间隔离。
-
 ```
-手机 localhost:3000
-  → ADB 反向隧道（Windows PowerShell: adb reverse tcp:3000 tcp:3000）
-       → Windows localhost:3000
-            → WSL2 自动桥接
-                 → WSL 内后端（监听 0.0.0.0）
+手机 → ADB 反向隧道（Windows PowerShell）→ Windows localhost → WSL2 桥接 → 后端（0.0.0.0）
 ```
 
-**关键**：`adb reverse` 必须在 Windows PowerShell 执行而非 WSL 内；后端监听 `0.0.0.0` 而非 `127.0.0.1`。
+`adb reverse` 必须在 Windows 端执行，后端监听 `0.0.0.0` 而非 `127.0.0.1`。
 
 ---
 
@@ -232,10 +226,10 @@ WebView JS（React）
 | Phase 2 | Agent 核心 | ✅ | Kimi 集成、Schedule/Expense 9个工具、流式接口 |
 | Phase 3 | Android 聊天界面 | ✅ | OkHttp 流式客户端、Compose ChatScreen、真机联调 |
 | Phase 4 | WebView 日历/费用 | ✅ | React + Vite UI、WebView Bridge、三 Tab 导航 |
-| Phase 5 | 集成与打磨 | ✅ | 6个 Demo 场景真机验证、键盘/导航栏 Bug 修复、会话持久化 |
-| Phase 6 | 阿里云部署 | 🟡 | ECS 部署、Nginx 安全配置、公网访问验证 |
+| Phase 5 | 集成与打磨 | ✅ | 6个 Demo 场景真机验证、键盘/导航栏修复、会话持久化 |
+| Phase 6 | 阿里云部署 | ✅ | ECS 部署、Nginx 安全配置、公网访问验证 |
 
-**开发周期**：2026-04-03 ～ 2026-04-13，约 12 天
+**开发周期**：2026-04-03 ～ 2026-04-14，约 12 天
 
 ---
 
@@ -262,83 +256,61 @@ WebView JS（React）
 | Kimi-k2.5（月之暗面） | ~40% | 后端 Agent 运行时调用（App 功能本身） |
 | Claude Haiku 4.5 | ~20% | UI 组件生成、脚手架、文档更新 |
 
-> Kimi-k2.5 同时扮演两个角色：**开发辅助**（Claude Code 任务分配）和 **App 运行时**（作为 Multi-Agent 的推理引擎）。
+> Kimi-k2.5 同时扮演两个角色：**开发辅助**（Claude Code 任务分配）和 **App 运行时**（Multi-Agent 推理引擎）。
 
 ---
 
-### Token 消耗统计（Claude Code 部分）
+### Token 消耗统计（完整项目，来自 Claude Code 实际记录）
 
-以下数据来自 Claude Code 的 usage tracking，统计时间范围：2026-04-03 ～ 2026-04-07（已落盘 session）。
+统计时间：2026-04-03 ～ 2026-04-14，共 **2,529 次 API 调用**。
 
-| 日期 | 输入 tokens | 输出 tokens | 缓存写入 | 缓存读取 | API 调用次数 |
-|------|----------:|----------:|--------:|--------:|:-----------:|
-| 2026-04-03 | 1,559 | 13,606 | 447,442 | 2,042,785 | 40 |
-| 2026-04-06 | 26,746 | 161,906 | 5,784,358 | 55,994,090 | 604 |
-| 2026-04-07（估算） | — | — | — | — | ~50 |
-| **合计** | **28,305** | **175,512** | **6,231,800** | **58,036,875** | **646+** |
+#### Claude Sonnet 4.6（两个部署版本合并）
 
-**Token 结构分析**
+| 计费项 | Token 数 | 单价（OpenRouter） | 费用 |
+|--------|----------:|------------------:|-----:|
+| 普通输入 | 69,238 | $3.00 / M | $0.21 |
+| 输出 | 606,709 | $15.00 / M | $9.10 |
+| 缓存写入 | 11,517,300 | $3.75 / M | $43.19 |
+| 缓存读取 | 82,504,682 | $0.30 / M | $24.75 |
+| **API 小计** | | | **$77.25** |
+| OpenRouter 充值手续费（+8%） | | | +$6.72 |
+| **实际支付** | | | **$83.97** |
 
-```
-总 token 流量：64,472,492
-├── 普通输入：       28,305   （0.04%）← 极少，主要由系统提示缓存代替
-├── 输出：          175,512   （0.27%）← 实际生成内容
-├── 缓存写入：    6,231,800   （9.7%） ← 首次写入缓存，按折扣价计费
-└── 缓存读取：   58,036,875   （90%）  ← 不收费（Claude Code 自动管理 prompt cache）
-```
+#### Claude Haiku 4.5（两个部署版本合并）
 
-> **缓存命中率 90%** 是 Claude Code 自动管理 prompt cache 的效果。每次 API 调用重复携带大量系统上下文（项目规则、历史工具结果、CLAUDE.md），缓存读取价格仅为正常输入的 1/10，且本项目缓存读取部分**实际计为 $0**（Claude Code 订阅内包含）。
+| 计费项 | Token 数 | 单价（OpenRouter） | 费用 |
+|--------|----------:|------------------:|-----:|
+| 普通输入 | 3,035 | $0.80 / M | $0.00 |
+| 输出 | 60,807 | $4.00 / M | $0.24 |
+| 缓存写入 | 1,578,763 | $1.00 / M | $1.58 |
+| 缓存读取 | 15,472,634 | $0.08 / M | $1.24 |
+| **API 小计** | | | **$3.06** |
+| OpenRouter 充值手续费（+8%） | | | +$0.27 |
+| **实际支付** | | | **$3.33** |
 
----
+#### Kimi-k2.5（月之暗面官方计价）
 
-### 费用明细（Claude Code 部分，OpenRouter 计价）
-
-| 计费项目 | Token 数 | 单价 | 费用（USD） |
-|---------|----------:|------|----------:|
-| 普通输入 | 28,305 | $3.00/M | $0.08 |
-| 输出 | 175,512 | $15.00/M | $2.63 |
-| 缓存写入 | 6,231,800 | $3.75/M | $23.37 |
-| 缓存读取 | 58,036,875 | $0.30/M | $17.41 |
-| **API 账单小计** | | | **$43.50** |
-| OpenRouter 充值手续费（+8%） | | | +$3.78 |
-| **Claude Code 实际支付** | | | **$47.28** |
-
-> OpenRouter 信用卡充值收取 8% 手续费，实际到账余额为充值金额的 92%，因此等效多付 $3.78。
-
-### 无缓存对比分析
-
-| 场景 | 费用 |
-|------|-----:|
-| 实际费用（含缓存） | $43.50 |
-| 若无缓存机制（58M 缓存读取全部按正常输入计费） | $176.83 |
-| **缓存节省** | **$133.33（节省 75.4%）** |
-
-### Kimi API 运行时费用（月之暗面计价）
-
-| 计费项目 | 估算量 | 单价（官方） | 费用（RMB） |
-|---------|------:|------|----------:|
-| 输入 tokens（开发测试） | ~500K | ¥12/M | ¥6.00 |
-| 输出 tokens（开发测试） | ~200K | ¥12/M | ¥2.40 |
-| **Kimi 小计** | | | **≈ ¥8.40** |
-
-> Kimi-k2.5 费用极低，主要成本来自 Claude Code 的辅助开发调用（缓存写入为主）。
+| 计费项 | Token 数 | 单价（官方） | 费用 |
+|--------|----------:|------------:|-----:|
+| 普通输入 | 24,474,462 | ¥4.00 / M | ¥97.90 |
+| 输出 | 306,746 | ¥16.00 / M | ¥4.91 |
+| 缓存读取 | 94,580,640 | ¥1.00 / M | ¥94.58 |
+| **小计** | | | **¥197.39** |
 
 ---
 
-## 应用截图
+### 资费总汇总
 
-<!-- 请将真实 App 截图放入 screenshots/ 目录后替换以下占位符 -->
+| 模型 | 实际支付 | 备注 |
+|------|--------:|------|
+| Claude Sonnet 4.6 | $83.97 | 含 OpenRouter 8% 手续费 |
+| Claude Haiku 4.5 | $3.33 | 含 OpenRouter 8% 手续费 |
+| Kimi-k2.5 | ¥197.39 ≈ $27.23 | 月之暗面官方计价，汇率 ¥7.25/$ |
+| **项目总费用** | **≈ $114.53 USD** | **≈ ¥830 RMB** |
 
-| 功能 | 截图 |
-|------|------|
-| AI 聊天界面 | *(待补充真实截图)* |
-| 日程创建成功 | *(待补充真实截图)* |
-| 多步请假（清空行程） | *(待补充真实截图)* |
-| 月历视图 | *(待补充真实截图)* |
-| 费用列表 | *(待补充真实截图)* |
-| 费用关联日程 | *(待补充真实截图)* |
-
-> 截图目录建议：`screenshots/`，格式建议：PNG，宽度建议：360px（1x）或 720px（2x）
+> **缓存节省分析**：若无 Claude Code prompt cache 机制，Claude 部分费用将从 $87.30 膨胀至 $292.88，**缓存节省 $205.58（70.2%）**。缓存命中的 token 按折扣价计费（缓存读取为正常输入价格的 1/10），有效控制了大量重复上下文的成本。
+>
+> **全项目 token 总流量：231.2M tokens（2,529 次 API 调用）**
 
 ---
 
@@ -350,12 +322,9 @@ Tally/
 │   └── app/src/main/kotlin/com/tally/app/
 │       ├── MainActivity.kt             # Edge-to-edge + windowInsets 配置
 │       ├── data/
-│       │   ├── model/ChatMessage.kt
 │       │   ├── remote/TallyApiClient.kt        # OkHttp 流式 SSE 客户端
 │       │   └── repository/ChatSessionRepository.kt  # DataStore 持久化
-│       ├── ui/
-│       │   ├── chat/ChatScreen.kt              # Gemini 风格聊天界面
-│       │   └── chat/ChatViewModel.kt           # StateFlow 状态管理
+│       ├── ui/chat/ChatScreen.kt               # Gemini 风格聊天界面
 │       └── navigation/
 │           ├── NavGraph.kt                     # 3-Tab Scaffold
 │           └── TallyJsBridge.kt                # @JavascriptInterface 桥接
@@ -363,84 +332,40 @@ Tally/
 ├── backend/                            # Node.js + TypeScript 后端
 │   └── src/
 │       ├── agents/
-│       │   ├── kimiClient.ts           # Kimi 兼容适配器（kimiCompatFetch 拦截器）
+│       │   ├── kimiClient.ts           # Kimi 兼容适配器（kimiCompatFetch）
 │       │   └── orchestrator.ts         # Multi-Agent 协调器
 │       ├── domains/
 │       │   ├── schedule/               # 日程域（5个工具）
 │       │   └── expense/                # 费用域（4个工具）
-│       ├── api/routes/                 # REST API（chat / events / expenses / health）
-│       └── infrastructure/db.ts        # PostgreSQL 连接池
+│       └── api/routes/                 # REST API（chat/events/expenses/health）
 │
 ├── webview-ui/                         # React + Vite WebView UI
 │   └── src/
-│       ├── views/CalendarView.tsx      # 月历网格（24px 圆角，胶囊型 Chips）
+│       ├── views/CalendarView.tsx      # 月历网格（24px 圆角）
 │       └── views/ExpenseView.tsx       # 费用列表 + 汇总
 │
-└── README.md
+└── screenshots/                        # App 真机截图
 ```
 
 ---
 
 ## 本地开发启动
 
-> **环境要求**：WSL2（Ubuntu）+ Docker Desktop（Windows 端启动）+ ADB
-
-### 1. 后端启动
-
 ```bash
-cd backend
+# 1. 后端
+cd backend && cp .env.example .env   # 填入 KIMI_API_KEY / TAVILY_API_KEY / DATABASE_URL
+docker compose up -d                  # 启动 PostgreSQL
+npm run migrate && npm run dev        # 迁移 + 启动（port 3000）
 
-# 配置环境变量
-cp .env.example .env
-# 填入以下 Key：
-# KIMI_API_KEY   — 月之暗面：https://platform.moonshot.cn
-# TAVILY_API_KEY — Tavily：https://tavily.com（1000次/月免费）
-# DATABASE_URL   — PostgreSQL 连接字符串（见 docker-compose.yml）
-
-# 启动 PostgreSQL
-docker compose up -d
-
-# 执行数据库迁移
-npm run migrate
-
-# 启动开发服务器（port 3000）
-npm run dev
-```
-
-### 2. Android 真机调试
-
-```bash
-# Windows PowerShell — 建立 ADB 反向隧道
+# 2. Android 真机（Windows PowerShell）
 adb reverse tcp:3000 tcp:3000
-
-# WSL — 编译 Debug APK
+# WSL 编译
 cd android && ./gradlew assembleDebug
-
-# 安装到真机
 adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# 3. WebView UI（可选，已预构建）
+cd webview-ui && npm install && npm run build
 ```
-
-### 3. WebView UI 构建（可选，已预构建）
-
-```bash
-cd webview-ui
-npm install
-npm run build
-# 产物自动输出到 android/app/src/main/assets/www/
-```
-
----
-
-## 重要技术决策记录
-
-| 问题 | 结论 |
-|------|------|
-| kimi-k2.5 多步工具调用返回 400 | 注入 `reasoning_content: "."` 占位符（见亮点 1） |
-| WebView 白屏无报错 | Vite 插件去除 `type="module"`，改 IIFE + defer（见亮点 2） |
-| WSL 真机调试无法连接 | `adb reverse` 在 Windows 执行，后端监听 `0.0.0.0`（见亮点 4） |
-| OkHttp 流式读取异常 | `response.use{}` + 捕获 `IOException`，不用 `exhausted()` |
-| Compose 输入框键盘空白 | 两阶段修复：Manifest 加 `adjustResize` + NavHost 加 `consumeWindowInsets` |
-| 导航栏高度冗余 | Material 3 默认 80dp → 62dp；图标 22→20dp；标签 11→10sp |
 
 ---
 
